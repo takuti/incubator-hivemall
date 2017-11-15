@@ -123,7 +123,6 @@ create temporary function normalize_unicode as 'hivemall.tools.text.NormalizeUni
 create temporary function base91 as 'hivemall.tools.text.Base91UDF';
 create temporary function unbase91 as 'hivemall.tools.text.Unbase91UDF';
 create temporary function lr_datagen as 'hivemall.dataset.LogisticRegressionDataGeneratorUDTF';
-create temporary function f1score as 'hivemall.evaluation.FMeasureUDAF';
 create temporary function mae as 'hivemall.evaluation.MeanAbsoluteErrorUDAF';
 create temporary function mse as 'hivemall.evaluation.MeanSquaredErrorUDAF';
 create temporary function rmse as 'hivemall.evaluation.RootMeanSquaredErrorUDAF';
@@ -154,6 +153,8 @@ create temporary function tiley2lat as 'hivemall.geospatial.TileY2LatUDF';
 create temporary function haversine_distance as 'hivemall.geospatial.HaversineDistanceUDF';
 create temporary function auc as 'hivemall.evaluation.AUCUDAF';
 create temporary function word_ngrams as 'hivemall.tools.text.WordNgramsUDF';
+create temporary function f1score as 'hivemall.evaluation.F1ScoreUDAF';
+create temporary function fmeasure as 'hivemall.evaluation.FMeasureUDAF';
 
 -- NLP features
 create temporary function tokenize_ja as 'hivemall.nlp.tokenizer.KuromojiUDF';

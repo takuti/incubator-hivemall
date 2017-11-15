@@ -295,6 +295,10 @@ public final class HiveUtils {
         }
     }
 
+    public static boolean isListTypeInfo(@Nonnull TypeInfo typeInfo) {
+        return typeInfo.getCategory() == Category.LIST;
+    }
+
     public static boolean isConstListOI(@Nonnull final ObjectInspector oi) {
         return ObjectInspectorUtils.isConstantObjectInspector(oi) && isListOI(oi);
     }
