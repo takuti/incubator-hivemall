@@ -155,6 +155,11 @@ create temporary function auc as 'hivemall.evaluation.AUCUDAF';
 create temporary function word_ngrams as 'hivemall.tools.text.WordNgramsUDF';
 create temporary function f1score as 'hivemall.evaluation.F1ScoreUDAF';
 create temporary function fmeasure as 'hivemall.evaluation.FMeasureUDAF';
+create temporary function precision_at as 'hivemall.evaluation.PrecisionUDAF';
+create temporary function recall_at as 'hivemall.evaluation.RecallUDAF';
+create temporary function mrr as 'hivemall.evaluation.MRRUDAF';
+create temporary function average_precision as 'hivemall.evaluation.MAPUDAF';
+create temporary function hitrate as 'hivemall.evaluation.HitRateUDAF';
 
 -- NLP features
 create temporary function tokenize_ja as 'hivemall.nlp.tokenizer.KuromojiUDF';

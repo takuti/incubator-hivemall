@@ -16,16 +16,33 @@
  * specific language governing permissions and limitations
  * under the License.
  */
+/*
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+*   http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 package hivemall.evaluation;
 
-import static org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory.writableDoubleObjectInspector;
-import static org.apache.hadoop.hive.serde2.objectinspector.primitive.PrimitiveObjectInspectorFactory.writableLongObjectInspector;
 import hivemall.utils.hadoop.HiveUtils;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import javax.annotation.Nonnegative;
 import javax.annotation.Nonnull;
 
 import org.apache.hadoop.hive.ql.exec.Description;
@@ -49,10 +66,10 @@ import org.apache.hadoop.hive.serde2.typeinfo.TypeInfo;
 import org.apache.hadoop.io.LongWritable;
 
 @Description(
-        name = "ndcg",
+        name = "hitrate",
         value = "_FUNC_(array rankItems, array correctItems [, const int recommendSize = rankItems.size])"
-                + " - Returns nDCG")
-public final class NDCGUDAF extends AbstractGenericUDAFResolver {
+                + " - Returns HitRate")
+public final class HitRateUDAF extends AbstractGenericUDAFResolver {
 
     @Override
     public GenericUDAFEvaluator getEvaluator(@Nonnull TypeInfo[] typeInfo) throws SemanticException {
@@ -62,8 +79,7 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
         }
 
         ListTypeInfo arg1type = HiveUtils.asListTypeInfo(typeInfo[0]);
-        if (!HiveUtils.isPrimitiveTypeInfo(arg1type.getListElementTypeInfo())
-                && !HiveUtils.isStructTypeInfo(arg1type.getListElementTypeInfo())) {
+        if (!HiveUtils.isPrimitiveTypeInfo(arg1type.getListElementTypeInfo())) {
             throw new UDFArgumentTypeException(0,
                     "The first argument `array rankItems` is invalid form: " + typeInfo[0]);
         }
@@ -73,7 +89,7 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
                     "The second argument `array correctItems` is invalid form: " + typeInfo[1]);
         }
 
-        return new Evaluator();
+        return new HitRateUDAF.Evaluator();
     }
 
     public static class Evaluator extends GenericUDAFEvaluator {
@@ -118,8 +134,8 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
         }
 
         private static StructObjectInspector internalMergeOI() {
-            List<String> fieldNames = new ArrayList<String>();
-            List<ObjectInspector> fieldOIs = new ArrayList<ObjectInspector>();
+            ArrayList<String> fieldNames = new ArrayList<String>();
+            ArrayList<ObjectInspector> fieldOIs = new ArrayList<ObjectInspector>();
 
             fieldNames.add("sum");
             fieldOIs.add(PrimitiveObjectInspectorFactory.writableDoubleObjectInspector);
@@ -130,8 +146,8 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
         }
 
         @Override
-        public NDCGAggregationBuffer getNewAggregationBuffer() throws HiveException {
-            NDCGAggregationBuffer myAggr = new NDCGAggregationBuffer();
+        public HitRateAggregationBuffer getNewAggregationBuffer() throws HiveException {
+            HitRateAggregationBuffer myAggr = new HitRateAggregationBuffer();
             reset(myAggr);
             return myAggr;
         }
@@ -139,14 +155,14 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
         @Override
         public void reset(@SuppressWarnings("deprecation") AggregationBuffer agg)
                 throws HiveException {
-            NDCGAggregationBuffer myAggr = (NDCGAggregationBuffer) agg;
+            HitRateAggregationBuffer myAggr = (HitRateAggregationBuffer) agg;
             myAggr.reset();
         }
 
         @Override
         public void iterate(@SuppressWarnings("deprecation") AggregationBuffer agg,
                 Object[] parameters) throws HiveException {
-            NDCGAggregationBuffer myAggr = (NDCGAggregationBuffer) agg;
+            HitRateAggregationBuffer myAggr = (HitRateAggregationBuffer) agg;
 
             List<?> recommendList = recommendListOI.getList(parameters[0]);
             if (recommendList == null) {
@@ -167,56 +183,13 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
                 }
             }
 
-            boolean isBinary = !HiveUtils.isStructOI(recommendListOI.getListElementObjectInspector());
-            double ndcg = 0.0d;
-
-            if (isBinary) {
-                ndcg = BinaryResponsesMeasures.nDCG(recommendList, truthList, recommendSize);
-            } else {
-                // Create a ordered list of relevance scores for recommended items
-                List<Double> recommendRelScoreList = new ArrayList<Double>();
-                StructObjectInspector sOI = (StructObjectInspector) recommendListOI.getListElementObjectInspector();
-                List<?> fieldRefList = sOI.getAllStructFieldRefs();
-                StructField relScoreField = (StructField) fieldRefList.get(0);
-                PrimitiveObjectInspector relScoreFieldOI = HiveUtils.asDoubleCompatibleOI(relScoreField.getFieldObjectInspector());
-                for (int i = 0, n = recommendList.size(); i < n; i++) {
-                    Object structObj = recommendList.get(i);
-                    List<Object> fieldList = sOI.getStructFieldsDataAsList(structObj);
-                    Object field0 = fieldList.get(0);
-                    if (field0 == null) {
-                        throw new UDFArgumentException("Field 0 of a struct field is null: "
-                                + fieldList);
-                    }
-                    double relScore = PrimitiveObjectInspectorUtils.getDouble(field0,
-                            relScoreFieldOI);
-                    recommendRelScoreList.add(relScore);
-                }
-
-                // Create a ordered list of relevance scores for truth items
-                List<Double> truthRelScoreList = new ArrayList<Double>();
-                PrimitiveObjectInspector truthRelScoreOI = HiveUtils.asDoubleCompatibleOI(truthListOI.getListElementObjectInspector());
-                for (int i = 0, n = truthList.size(); i < n; i++) {
-                    Object relScoreObj = truthList.get(i);
-                    if (relScoreObj == null) {
-                        throw new UDFArgumentException("Found null in the ground truth: "
-                                + truthList);
-                    }
-                    double relScore = PrimitiveObjectInspectorUtils.getDouble(relScoreObj,
-                            truthRelScoreOI);
-                    truthRelScoreList.add(relScore);
-                }
-
-                ndcg = GradedResponsesMeasures.nDCG(recommendRelScoreList, truthRelScoreList,
-                        recommendSize);
-            }
-
-            myAggr.iterate(ndcg);
+            myAggr.iterate(recommendList, truthList, recommendSize);
         }
 
         @Override
         public Object terminatePartial(@SuppressWarnings("deprecation") AggregationBuffer agg)
                 throws HiveException {
-            NDCGAggregationBuffer myAggr = (NDCGAggregationBuffer) agg;
+            HitRateAggregationBuffer myAggr = (HitRateAggregationBuffer) agg;
 
             Object[] partialResult = new Object[2];
             partialResult[0] = new DoubleWritable(myAggr.sum);
@@ -233,29 +206,30 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
 
             Object sumObj = internalMergeOI.getStructFieldData(partial, sumField);
             Object countObj = internalMergeOI.getStructFieldData(partial, countField);
-            double sum = writableDoubleObjectInspector.get(sumObj);
-            long count = writableLongObjectInspector.get(countObj);
+            double sum = PrimitiveObjectInspectorFactory.writableDoubleObjectInspector.get(sumObj);
+            long count = PrimitiveObjectInspectorFactory.writableLongObjectInspector.get(countObj);
 
-            NDCGAggregationBuffer myAggr = (NDCGAggregationBuffer) agg;
+            HitRateAggregationBuffer myAggr = (HitRateAggregationBuffer) agg;
             myAggr.merge(sum, count);
         }
 
         @Override
         public DoubleWritable terminate(@SuppressWarnings("deprecation") AggregationBuffer agg)
                 throws HiveException {
-            NDCGAggregationBuffer myAggr = (NDCGAggregationBuffer) agg;
+            HitRateAggregationBuffer myAggr = (HitRateAggregationBuffer) agg;
             double result = myAggr.get();
             return new DoubleWritable(result);
         }
 
     }
 
-    public static class NDCGAggregationBuffer implements GenericUDAFEvaluator.AggregationBuffer {
+    public static final class HitRateAggregationBuffer implements
+            GenericUDAFEvaluator.AggregationBuffer {
 
-        double sum;
-        long count;
+        private double sum;
+        private long count;
 
-        public NDCGAggregationBuffer() {
+        public HitRateAggregationBuffer() {
             super();
         }
 
@@ -265,8 +239,8 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
         }
 
         void merge(double o_sum, long o_count) {
-            sum += o_sum;
-            count += o_count;
+            this.sum += o_sum;
+            this.count += o_count;
         }
 
         double get() {
@@ -276,10 +250,10 @@ public final class NDCGUDAF extends AbstractGenericUDAFResolver {
             return sum / count;
         }
 
-        void iterate(@Nonnull double ndcg) {
-            sum += ndcg;
-            count++;
+        void iterate(@Nonnull List<?> recommendList, @Nonnull List<?> truthList,
+                @Nonnegative int recommendSize) {
+            this.sum += BinaryResponsesMeasures.Hit(recommendList, truthList, recommendSize);
+            this.count++;
         }
     }
-
 }

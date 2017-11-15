@@ -432,6 +432,30 @@ sqlContext.sql("CREATE TEMPORARY FUNCTION mse AS 'hivemall.evaluation.MeanSquare
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS rmse")
 sqlContext.sql("CREATE TEMPORARY FUNCTION rmse AS 'hivemall.evaluation.RootMeanSquaredErrorUDAF'")
 
+sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS r2")
+sqlContext.sql("CREATE TEMPORARY FUNCTION r2 AS 'hivemall.evaluation.R2UDAF'")
+
+sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS ndcg")
+sqlContext.sql("CREATE TEMPORARY FUNCTION ndcg AS 'hivemall.evaluation.NDCGUDAF'")
+
+sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS precision_at")
+sqlContext.sql("CREATE TEMPORARY FUNCTION precision_at AS 'hivemall.evaluation.PrecisionUDAF'")
+
+sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS recall_at")
+sqlContext.sql("CREATE TEMPORARY FUNCTION recall_at AS 'hivemall.evaluation.RecallUDAF'")
+
+sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS hitrate")
+sqlContext.sql("CREATE TEMPORARY FUNCTION hitrate AS 'hivemall.evaluation.HitRateUDAF'")
+
+sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS mrr")
+sqlContext.sql("CREATE TEMPORARY FUNCTION mrr AS 'hivemall.evaluation.MRRUDAF'")
+
+sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS average_precision")
+sqlContext.sql("CREATE TEMPORARY FUNCTION average_precision AS 'hivemall.evaluation.MAPUDAF'")
+
+sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS logloss")
+sqlContext.sql("CREATE TEMPORARY FUNCTION logloss AS 'hivemall.evaluation.LogarithmicLossUDAF'")
+
 sqlContext.sql("DROP TEMPORARY FUNCTION IF EXISTS auc")
 sqlContext.sql("CREATE TEMPORARY FUNCTION auc AS 'hivemall.evaluation.AUCUDAF'")
 

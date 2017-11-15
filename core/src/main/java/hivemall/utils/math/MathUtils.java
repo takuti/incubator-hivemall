@@ -39,6 +39,7 @@ import java.util.Random;
 import javax.annotation.Nonnull;
 
 public final class MathUtils {
+    public static final double LOG2 = Math.log(2);
 
     private MathUtils() {}
 
@@ -240,6 +241,10 @@ public final class MathUtils {
 
     public static double log(final double n, final int base) {
         return Math.log(n) / Math.log(base);
+    }
+
+    public static double log2(final double n) {
+        return Math.log(n) / LOG2;
     }
 
     public static int floorDiv(final int x, final int y) {

@@ -229,6 +229,10 @@ public final class HiveUtils {
         }
     }
 
+    public static boolean isStructOI(@Nonnull final ObjectInspector oi) {
+        return oi.getCategory() == Category.STRUCT;
+    }
+
     @Nonnull
     public static boolean isListOI(@Nonnull final ObjectInspector oi) {
         Category category = oi.getCategory();
@@ -293,6 +297,10 @@ public final class HiveUtils {
             default:
                 return false;
         }
+    }
+
+    public static boolean isStructTypeInfo(@Nonnull TypeInfo typeInfo) {
+        return typeInfo.getCategory() == ObjectInspector.Category.STRUCT;
     }
 
     public static boolean isListTypeInfo(@Nonnull TypeInfo typeInfo) {

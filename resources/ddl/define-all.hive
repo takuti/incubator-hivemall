@@ -527,6 +527,21 @@ create temporary function r2 as 'hivemall.evaluation.R2UDAF';
 drop temporary function ndcg;
 create temporary function ndcg as 'hivemall.evaluation.NDCGUDAF';
 
+drop temporary function if exists precision_at;
+create temporary function precision_at as 'hivemall.evaluation.PrecisionUDAF';
+
+drop temporary function if exists recall_at;
+create temporary function recall_at as 'hivemall.evaluation.RecallUDAF';
+
+drop temporary function if exists hitrate;
+create temporary function hitrate as 'hivemall.evaluation.HitRateUDAF';
+
+drop temporary function if exists mrr;
+create temporary function mrr as 'hivemall.evaluation.MRRUDAF';
+
+drop temporary function if exists average_precision;
+create temporary function average_precision as 'hivemall.evaluation.MAPUDAF';
+
 drop temporary function logloss;
 create temporary function logloss as 'hivemall.evaluation.LogarithmicLossUDAF';
 
