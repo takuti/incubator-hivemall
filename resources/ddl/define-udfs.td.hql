@@ -161,6 +161,10 @@ create temporary function mrr as 'hivemall.evaluation.MRRUDAF';
 create temporary function average_precision as 'hivemall.evaluation.MAPUDAF';
 create temporary function hitrate as 'hivemall.evaluation.HitRateUDAF';
 
+create temporary function approx_count_distinct as 'hivemall.sketch.hll.ApproxCountDistinctUDAF';
+-- alias for compatibility with Presto
+create temporary function approx_distinct as 'hivemall.sketch.hll.ApproxCountDistinctUDAF';
+
 -- NLP features
 create temporary function tokenize_ja as 'hivemall.nlp.tokenizer.KuromojiUDF';
 

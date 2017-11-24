@@ -299,6 +299,13 @@ public final class HiveUtils {
         }
     }
 
+    public static boolean isStringTypeInfo(@Nonnull TypeInfo typeInfo) {
+        if (typeInfo.getCategory() != ObjectInspector.Category.PRIMITIVE) {
+            return false;
+        }
+        return ((PrimitiveTypeInfo) typeInfo).getPrimitiveCategory() == PrimitiveObjectInspector.PrimitiveCategory.STRING;
+    }
+
     public static boolean isStructTypeInfo(@Nonnull TypeInfo typeInfo) {
         return typeInfo.getCategory() == ObjectInspector.Category.STRUCT;
     }
